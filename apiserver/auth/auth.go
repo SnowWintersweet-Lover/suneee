@@ -1,9 +1,9 @@
 package auth
 
 import (
-	"../etc/apiconfig"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/zhaozf-zhiming/suneee/apiserver/etc/apiconfig"
 	"strings"
 )
 

@@ -1,7 +1,7 @@
 package log
 
 import (
-	"../../etc/apiconfig"
+	"github.com/zhaozf-zhiming/suneee/apiserver/etc/apiconfig"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"

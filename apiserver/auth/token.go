@@ -1,12 +1,12 @@
 package auth
 
 import (
-	"../common/log"
-	"../etc/apiconfig"
-	"../handler"
 	"encoding/csv"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	"github.com/zhaozf-zhiming/suneee/apiserver/common/log"
+	"github.com/zhaozf-zhiming/suneee/apiserver/etc/apiconfig"
+	"github.com/zhaozf-zhiming/suneee/apiserver/handler"
 	"go.uber.org/zap"
 	"io/ioutil"
 	"net/http"

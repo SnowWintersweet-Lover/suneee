@@ -1,8 +1,8 @@
 package log
 
 import (
-	"../../etc/apiconfig"
 	"fmt"
+	"github.com/zhaozf-zhiming/suneee/apiserver/etc/apiconfig"
 	"net/http"
 )
 

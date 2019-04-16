@@ -1,11 +1,11 @@
 package handler
 
 import (
-	"../common/log"
-	"../common/types"
-	"../k8s_cli"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"github.com/zhaozf-zhiming/suneee/apiserver/common/log"
+	"github.com/zhaozf-zhiming/suneee/apiserver/common/types"
+	"github.com/zhaozf-zhiming/suneee/apiserver/k8s_cli"
 	"net/http"
 	"strconv"
 )
