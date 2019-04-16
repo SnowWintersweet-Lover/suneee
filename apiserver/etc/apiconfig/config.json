@@ -1,0 +1,42 @@
+{
+  "server": {
+    "host": {
+      "address": "0.0.0.0",
+      "port": 8443
+    },
+    "tls" : {
+      "enable": false,
+      "verify_peer": true
+    },
+    "pki": {
+      "key": "./key/privkey.pem",
+      "cert": "./key/fullchain.pem",
+      "ca": "./key/chain.pem"
+    }
+  },
+  "etcd": {
+    "address_list": ["http://localhost:2379"]
+  },
+  "log": {
+    "path": "./log/baas.log",
+    "host": {
+      "address": "0.0.0.0",
+      "port": 9001
+    }
+  },
+  "minio": {
+    "enable": true,
+    "secure": false,
+    "address": "10.6.250.49",
+    "port": 9000,
+    "access_key": "root",
+    "secret_key": "12345678"
+  },
+  "ipfs": {
+    "address": "10.6.250.51",
+    "api_port": 5001
+  },
+  "token_auth": {
+    "path": "/etc/apiconfig/token_auth.csv"
+  }
+}
