@@ -3,7 +3,6 @@ package apiconfig
 import (
 	"fmt"
 	"github.com/spf13/viper"
-	"github.com/zhaozf-zhiming/suneee/apiserver/common/log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -64,12 +63,10 @@ func init() {
 	if serverPath == "" {
 		dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 		if err != nil {
-			log.Sugar.Fatal(err.Error())
+			return
 		}
 		serverPath = strings.Replace(dir, "\\", "/", -1)
 	}
-	log.Sugar.Debugf("BAAS_PATH = %s", serverPath)
-	//serverPath = "./"
 	InitConfig(filepath.Join(GetServerDir(), defaultFilePath))
 }
 func InitConfig(filePath string) {

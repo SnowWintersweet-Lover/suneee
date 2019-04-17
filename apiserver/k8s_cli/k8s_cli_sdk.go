@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-var ConfigPath = "/k8s_cli/dmin.conf"
+var ConfigPath = "/k8s_cli/admin.conf"
 var iCount = 0 //用于记录分页索引,也作为返回total值
 
 func InitClient() (*kubernetes.Clientset, error) {
