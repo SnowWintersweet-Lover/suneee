@@ -42,7 +42,7 @@ func InitServer() {
 	v1Deployment := r.Group(fmt.Sprintf("/api/%s/deployment", apiconfig.GetApiDefaultVersion()))
 	{
 		v1Deployment.GET("", handler.HandlerGetDeployment)
-
+		v1Deployment.OPTIONS("", handler.HandlerGetDeployment)
 	}
 	s := &http.Server{
 		Addr:           fmt.Sprintf("%s:%d", apiconfig.Config.Server.Host.Address, apiconfig.Config.Server.Host.Port),
