@@ -49,7 +49,7 @@ type ConfigStruct struct {
 
 var (
 	defaultApiVersion = "v1"
-	defaultFilePath   = "/etc/apiconfig/config.json"
+	defaultFilePath   = "Z:/工程源码/k8s/suneee/apiserver/etc/apiconfig/config.json"
 	ViperConfig       *viper.Viper
 	Config            *ConfigStruct
 	serverPath        = os.Getenv("BAAS_PATH")

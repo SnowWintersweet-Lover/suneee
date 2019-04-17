@@ -8,6 +8,11 @@ type DeploymentInfo struct {
 	InsCount  string `json:"ins_count"`           //实例数，如‘1/3’，右边数字是定义的最大实例数，左边是实际在运行的实例	数
 }
 
+type NamespaceInfo struct {
+	Total      int              `json:"total,omitempty"`
+	DeployList []DeploymentInfo `json:"list,omitempty"`
+}
+
 type QueryDeployment struct {
 	Namespace string `json:"namespace,omitempty"` //命名空间
 	Name      string `json:"name,omitempty"`      //部署名称
@@ -16,6 +21,11 @@ type QueryDeployment struct {
 }
 
 type QueryDeploymentOut struct {
-	Total      int              `json:"total,omitempty"`
-	DeployList []DeploymentInfo `json:"list,omitempty"`
+	Total      int             `json:"total,omitempty"`
+	Namespaces []NamespaceInfo `json:"namespace_list,omitempty"`
+}
+
+type QueryOut struct {
+	Total int              `json:"total,omitempty"`
+	List  []DeploymentInfo `json:"list,omitempty"`
 }

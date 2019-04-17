@@ -1,69 +1,143 @@
 package k8s_cli
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/prometheus/common/log"
+	"github.com/zhaozf-zhiming/suneee/apiserver/common/types"
 	"io/ioutil"
-	"k8s.io/api/apps/v1beta1"
-	core_v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"strings"
 )
 
-func InitClient() (clientset *kubernetes.Clientset, err error) {
-	var restConf *rest.Config
+var ConfigPath = "Z:\\工程源码\\k8s\\suneee\\apiserver\\k8s_cli\\admin.conf"
+var iCount = 0 //用于记录分页索引
+func homeDir() string {
+	honrPath := "Z:\\工程源码\\k8s\\suneee\\apiserver\\k8s_cli\\admin.conf"
+	return honrPath
+}
 
-	if restConf, err = GetRestConf(); err != nil {
+func InitClient() (*kubernetes.Clientset, error) {
+	kubeconfig, err := ioutil.ReadFile(ConfigPath)
+	if err != nil {
 		return nil, err
 	}
-
-	if clientset, err = kubernetes.NewForConfig(restConf); err != nil {
+	restConf, err := clientcmd.RESTConfigFromKubeConfig(kubeconfig)
+	if err != nil {
+		return nil, err
+	}
+	clientset, err := kubernetes.NewForConfig(restConf)
+	if err != nil {
 		return nil, err
 	}
 	return clientset, nil
 }
 
-func GetRestConf() (restConf *rest.Config, err error) {
-	var kubeconfig []byte
-	if kubeconfig, err = ioutil.ReadFile("./admin.conf"); err != nil {
+func QueryK8sInfo(queryInfo types.QueryDeployment) (*types.QueryOut, error) {
+	clientset, err := InitClient()
+	if err != nil {
 		return nil, err
 	}
+	iCount = 0
+	return QueryNamespace(clientset, queryInfo)
+}
+func QueryNamespace(clientset *kubernetes.Clientset, queryInfo types.QueryDeployment) (*types.QueryOut, error) {
+	queryOut := new(types.QueryOut)
 
-	if restConf, err = clientcmd.RESTConfigFromKubeConfig(kubeconfig); err != nil {
-		return nil, err
+	if queryInfo.Namespace == "" {
+		k8sNamespacelist, err := clientset.CoreV1().Namespaces().List(metav1.ListOptions{})
+		if err != nil {
+			return nil, err
+		}
+		for _, valNamespace := range k8sNamespacelist.Items {
+			queryInfo.Namespace = valNamespace.Name //对命名空间重新赋值
+			rtVal, err := QueryName(clientset, queryInfo)
+			if err != nil {
+				if strings.Contains(err.Error(), "not found") {
+					continue
+				}
+				return nil, err
+			}
+			queryOut.List = append(queryOut.List, rtVal.DeployList...)
+		}
+	} else {
+		rtVal, err := QueryName(clientset, queryInfo)
+		if err != nil {
+			return nil, err
+		}
+		queryOut.List = rtVal.DeployList
+		//deloymentOut.Namespaces = append(deloymentOut.Namespaces, *rtVal)
 	}
-	return restConf, nil
+	queryOut.Total = len(queryOut.List)
+	return queryOut, nil
 }
 
-func QueryK8sInfo() {
-	var (
-		clientset *kubernetes.Clientset
-		podsList  *core_v1.PodList
-		k8sDeploy *v1beta1.Deployment
-		err       error
-	)
-	if clientset, err = InitClient(); err != nil {
-		return
-	}
+func QueryName(clientset *kubernetes.Clientset, queryInfo types.QueryDeployment) (*types.NamespaceInfo, error) {
+	var deloyinfo types.DeploymentInfo
+	namespace := new(types.NamespaceInfo)
+	if queryInfo.Name == "" {
+		k8sDeploylist, err := clientset.AppsV1beta1().Deployments(queryInfo.Namespace).List(v1.ListOptions{})
+		if err != nil {
+			return nil, err
+		}
 
-	if podsList, err = clientset.CoreV1().Pods("bms-pre").List(meta_v1.ListOptions{}); err != nil {
-		return
-	}
-	fmt.Printf("%v", podsList)
-
-	k8sDeploy, err = clientset.AppsV1beta1().Deployments("bms-pre").Get("biz-rest", v1.GetOptions{})
-	fmt.Println(k8sDeploy)
-
-	if b, er := json.Marshal(k8sDeploy); er != nil {
-		log.Fatal(er)
+		for _, val := range k8sDeploylist.Items {
+			deloyinfo.Name = val.ObjectMeta.GetName()
+			deloyinfo.Namespace = val.ObjectMeta.GetNamespace()
+			valImage := val.Spec.Template.Spec.Containers[0]
+			deloyinfo.ImageName = valImage.Image
+			iAvailable := val.Status.AvailableReplicas
+			iReady := val.Status.ReadyReplicas
+			deloyinfo.InsCount = fmt.Sprintf("%d/%d", iAvailable, iReady)
+			if iAvailable == iReady {
+				deloyinfo.Status = "0"
+			} else if iAvailable < iReady {
+				deloyinfo.Status = "1"
+			} else {
+				deloyinfo.Status = "2"
+			}
+			if iCount >= queryInfo.Start {
+				if queryInfo.Limit == 0 {
+					namespace.DeployList = append(namespace.DeployList, deloyinfo)
+				} else {
+					if iCount-queryInfo.Start < queryInfo.Limit {
+						namespace.DeployList = append(namespace.DeployList, deloyinfo)
+					}
+				}
+			}
+			iCount++
+		}
 	} else {
-		fmt.Println(string(b))
-		fmt.Println("-===============================================")
+		k8sDeploy, err := clientset.AppsV1beta1().Deployments(queryInfo.Namespace).Get(queryInfo.Name, v1.GetOptions{})
+		if err != nil {
+			return nil, err
+		}
+		deloyinfo.Name = k8sDeploy.ObjectMeta.GetName()
+		deloyinfo.Namespace = k8sDeploy.ObjectMeta.GetNamespace()
+		valImage := k8sDeploy.Spec.Template.Spec.Containers[0]
+		deloyinfo.ImageName = valImage.Image
+		iAvailable := k8sDeploy.Status.AvailableReplicas
+		iReady := k8sDeploy.Status.ReadyReplicas
+		deloyinfo.InsCount = fmt.Sprintf("%d/%d", iAvailable, iReady)
+		if iAvailable == iReady {
+			deloyinfo.Status = "0"
+		} else if iAvailable < iReady {
+			deloyinfo.Status = "1"
+		} else {
+			deloyinfo.Status = "2"
+		}
+		if iCount >= queryInfo.Start {
+			if queryInfo.Limit == 0 {
+				namespace.DeployList = append(namespace.DeployList, deloyinfo)
+			} else {
+				if iCount-queryInfo.Start < queryInfo.Limit {
+					namespace.DeployList = append(namespace.DeployList, deloyinfo)
+				}
+			}
+		}
+		iCount++
 	}
-
-	return
+	namespace.Total = len(namespace.DeployList)
+	return namespace, nil
 }

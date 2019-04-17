@@ -1,14 +1,13 @@
 package main
 
 import (
-	"./auth"
-	"./common/log"
-	"./etc/apiconfig"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/zhaozf-zhiming/suneee/apiserver/common/log"
+	"github.com/zhaozf-zhiming/suneee/apiserver/etc/apiconfig"
 	"github.com/zhaozf-zhiming/suneee/apiserver/handler"
 	"io/ioutil"
 	"net/http"
@@ -17,17 +16,29 @@ import (
 	"time"
 )
 
+func middleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		c.Writer.Header().Set("Pragma", "no-cache")
+		c.Writer.Header().Set("Expires", "0")
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+		c.Next()
+	}
+}
+
 func InitServer() {
 	gin.SetMode(gin.DebugMode)
 	r := gin.New()
 	r.Use(gin.Recovery())
+	r.Use(middleware())
 	// 默认设置logger，但启用logger会导致吞吐量大幅度降低
 	if os.Getenv("GIN_LOG") != "off" {
 		r.Use(gin.Logger())
 	}
 	r.MaxMultipartMemory = 10 << 20 // 10 MB
 	r.GET("/ping", handler.PingHandler)
-	r.Use(auth.NewTokenAuth().Middleware())
+	//	r.Use(auth.NewTokenAuth().Middleware())
 	v1Deployment := r.Group(fmt.Sprintf("/api/%s/deployment", apiconfig.GetApiDefaultVersion()))
 	{
 		v1Deployment.GET("", handler.HandlerGetDeployment)
