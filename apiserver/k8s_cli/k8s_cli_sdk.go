@@ -3,23 +3,21 @@ package k8s_cli
 import (
 	"fmt"
 	"github.com/zhaozf-zhiming/suneee/apiserver/common/types"
+	"github.com/zhaozf-zhiming/suneee/apiserver/etc/apiconfig"
 	"io/ioutil"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+	"path/filepath"
 	"strings"
 )
 
-var ConfigPath = "Z:\\工程源码\\k8s\\suneee\\apiserver\\k8s_cli\\admin.conf"
-var iCount = 0 //用于记录分页索引
-func homeDir() string {
-	honrPath := "Z:\\工程源码\\k8s\\suneee\\apiserver\\k8s_cli\\admin.conf"
-	return honrPath
-}
+var ConfigPath = "/k8s_cli/dmin.conf"
+var iCount = 0 //用于记录分页索引,也作为返回total值
 
 func InitClient() (*kubernetes.Clientset, error) {
-	kubeconfig, err := ioutil.ReadFile(ConfigPath)
+	kubeconfig, err := ioutil.ReadFile(filepath.Join(apiconfig.GetServerDir(), ConfigPath))
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +67,7 @@ func QueryNamespace(clientset *kubernetes.Clientset, queryInfo types.QueryDeploy
 		queryOut.List = rtVal.DeployList
 		//deloymentOut.Namespaces = append(deloymentOut.Namespaces, *rtVal)
 	}
-	queryOut.Total = len(queryOut.List)
+	queryOut.Total = iCount
 	return queryOut, nil
 }
 
@@ -138,6 +136,5 @@ func QueryName(clientset *kubernetes.Clientset, queryInfo types.QueryDeployment)
 		}
 		iCount++
 	}
-	namespace.Total = len(namespace.DeployList)
 	return namespace, nil
 }

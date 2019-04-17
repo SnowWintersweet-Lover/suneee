@@ -3,6 +3,7 @@ package apiconfig
 import (
 	"fmt"
 	"github.com/spf13/viper"
+	"github.com/zhaozf-zhiming/suneee/apiserver/common/log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -49,7 +50,7 @@ type ConfigStruct struct {
 
 var (
 	defaultApiVersion = "v1"
-	defaultFilePath   = "Z:/工程源码/k8s/suneee/apiserver/etc/apiconfig/config.json"
+	defaultFilePath   = "/etc/apiconfig/config.json"
 	ViperConfig       *viper.Viper
 	Config            *ConfigStruct
 	serverPath        = os.Getenv("BAAS_PATH")
@@ -61,10 +62,14 @@ var (
 // 不再初始化时自动读取配置文件
 func init() {
 	if serverPath == "" {
-		serverPath = "./"
-		fmt.Println("BAAS_PATH env not set, use ./ as default")
+		dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+		if err != nil {
+			log.Sugar.Fatal(err.Error())
+		}
+		serverPath = strings.Replace(dir, "\\", "/", -1)
 	}
-	//log.Sugar.Debugf("BAAS_PATH ===> %s", serverPath)
+	log.Sugar.Debugf("BAAS_PATH = %s", serverPath)
+	//serverPath = "./"
 	InitConfig(filepath.Join(GetServerDir(), defaultFilePath))
 }
 func InitConfig(filePath string) {

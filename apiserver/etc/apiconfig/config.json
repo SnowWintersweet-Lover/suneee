@@ -37,6 +37,6 @@
     "api_port": 5001
   },
   "token_auth": {
-    "path": "Z:/工程源码/k8s/suneee/apiserver/etc/apiconfig/token_auth.csv"
+    "path": "/etc/apiconfig/token_auth.csv"
   }
 }
